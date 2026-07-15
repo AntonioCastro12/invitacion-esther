@@ -1,16 +1,18 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   CalendarDays,
   CalendarPlus,
   Clock,
+  Gamepad2,
   MapPin,
+  Menu,
+  MessageCircle,
   Music2,
   Pause,
   Play,
-  Send,
   Share2,
   Shirt,
-  Sparkles,
+  Users,
 } from 'lucide-react'
 
 const EVENT_CONFIG = {
@@ -19,8 +21,8 @@ const EVENT_CONFIG = {
   day: '31 de octubre',
   year: 2026,
   startTime: '8:00 p.m.',
-  location: 'Agregar dirección editable',
-  mapsUrl: 'https://maps.google.com/?q=Agregar%20direcci%C3%B3n%20editable',
+  location: 'Dirección del evento, Irapuato, Guanajuato',
+  mapsUrl: 'https://maps.google.com/?q=Direcci%C3%B3n%20del%20evento%20Irapuato%20Guanajuato',
   whatsappUrl:
     'https://wa.me/52462XXXXXXX?text=Hola,%20confirmo%20mi%20asistencia%20al%20cumplea%C3%B1os%2050%20de%20Esther',
   dressCode: 'Retro 80s/90s',
@@ -34,6 +36,7 @@ const details = [
   { label: 'Hora', value: EVENT_CONFIG.startTime, icon: Clock },
   { label: 'Lugar', value: EVENT_CONFIG.location, icon: MapPin },
   { label: 'Dress code', value: EVENT_CONFIG.dressCode, icon: Shirt },
+  { label: 'Confirmar asistencia', value: 'por WhatsApp', icon: Users },
 ]
 
 const AUDIO_SOURCES = [
@@ -110,27 +113,68 @@ function DiscoBallImage({ intro = false, revealed = false }) {
 function IntroScreen({ step, onAdvance }) {
   const isRevealed = step > 0
 
+  if (isRevealed) {
+    return (
+      <section className="intro-screen is-revealed retro-entry" aria-label="Pantalla de entrada retro">
+        <div className="scanlines" />
+        <div className="entry-floor" aria-hidden="true" />
+        <span className="entry-laser laser-pink" aria-hidden="true" />
+        <span className="entry-laser laser-cyan" aria-hidden="true" />
+        <span className="entry-laser laser-yellow" aria-hidden="true" />
+        <span className="entry-laser laser-violet" aria-hidden="true" />
+        <span className="entry-shape entry-shape-a" aria-hidden="true">✦</span>
+        <span className="entry-shape entry-shape-b" aria-hidden="true">♪</span>
+        <span className="entry-shape entry-shape-c" aria-hidden="true">✧</span>
+        <span className="entry-shape entry-shape-d" aria-hidden="true">⚡</span>
+
+        <button className="entry-poster" type="button" onClick={onAdvance} aria-label="Abrir invitación completa">
+          <span className="entry-kicker">Estás invitado</span>
+          <span className="entry-title" aria-label="Fiesta retro">
+            <span>Fiesta</span>
+            <strong>Retro</strong>
+          </span>
+          <span className="entry-era">80s & 90s</span>
+
+          <DiscoBallImage intro revealed />
+
+          <span className="entry-date">{EVENT_CONFIG.day}</span>
+          <span className="entry-message">Una noche para bailar, recordar y disfrutar como antes.</span>
+
+          <span className="entry-open">
+            Abrir invitación
+            <Play size={18} aria-hidden="true" />
+          </span>
+
+          <span className="cassette cassette-left" aria-hidden="true">
+            <i />
+            <i />
+          </span>
+          <span className="cassette cassette-right" aria-hidden="true">
+            <i />
+            <i />
+          </span>
+          <span className="equalizer" aria-hidden="true">
+            {Array.from({ length: 18 }).map((_, index) => (
+              <i key={index} />
+            ))}
+          </span>
+        </button>
+      </section>
+    )
+  }
+
   return (
-    <section className={`intro-screen ${isRevealed ? 'is-revealed' : 'is-waiting'}`} aria-label="Pantalla inicial de la invitación">
+    <section className="intro-screen is-waiting" aria-label="Pantalla inicial de la invitación">
       <div className="scanlines" />
       <button
         className="intro-orb-button"
         type="button"
         onClick={onAdvance}
-        aria-label={isRevealed ? 'Entrar a la invitación' : 'Abrir esfera disco'}
+        aria-label="Abrir esfera disco"
       >
-        <DiscoBallImage intro revealed={isRevealed} />
+        <DiscoBallImage intro />
       </button>
-      {!isRevealed && <p className="intro-hint">Toca la esfera</p>}
-      <div className="intro-copy">
-        <span>Estás invitado</span>
-        <h1>Cumpleaños 50 de Esther</h1>
-        <p>Fiesta retro 80s & 90s</p>
-        <button className="primary-open" type="button" onClick={onAdvance} aria-label="Entrar a la invitación">
-          <Play size={20} aria-hidden="true" />
-          Toca para entrar
-        </button>
-      </div>
+      <p className="intro-hint">Toca la esfera</p>
     </section>
   )
 }
@@ -169,85 +213,111 @@ function EventDetails() {
   )
 }
 
-function ActionButtons({ onCalendar, onShare, shareStatus }) {
+function getCountdownParts() {
+  const target = new Date(EVENT_CONFIG.year, 9, 31, 20, 0, 0)
+  const remaining = Math.max(0, target.getTime() - Date.now())
+  const totalSeconds = Math.floor(remaining / 1000)
+  const days = Math.floor(totalSeconds / 86400)
+  const hours = Math.floor((totalSeconds % 86400) / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+
+  return { days, hours, minutes, seconds }
+}
+
+function Countdown() {
+  const [timeLeft, setTimeLeft] = useState(getCountdownParts)
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setTimeLeft(getCountdownParts())
+    }, 1000)
+
+    return () => window.clearInterval(timer)
+  }, [])
+
+  const units = [
+    { label: 'Días', value: timeLeft.days },
+    { label: 'Horas', value: timeLeft.hours },
+    { label: 'Min', value: timeLeft.minutes },
+    { label: 'Seg', value: timeLeft.seconds },
+  ]
+
+  return (
+    <div className="countdown-panel" aria-label="Cuenta regresiva para la fiesta">
+      <span className="countdown-title">Cuenta regresiva</span>
+      <div className="countdown-units">
+        {units.map(({ label, value }) => (
+          <span className="countdown-unit" key={label}>
+            <strong>{String(value).padStart(2, '0')}</strong>
+            <small>{label}</small>
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function PosterActions({ onCalendar, onShare, shareStatus }) {
   const actions = [
     {
       type: 'link',
       label: 'Confirmar asistencia',
-      tone: 'Reserva tu lugar',
       href: EVENT_CONFIG.whatsappUrl,
-      icon: Send,
-      className: 'action-hot is-primary',
+      icon: MessageCircle,
+      className: 'poster-action-green',
       ariaLabel: 'Confirmar asistencia por WhatsApp',
     },
     {
       type: 'link',
       label: 'Ver ubicación',
-      tone: 'Cómo llegar',
       href: EVENT_CONFIG.mapsUrl,
       icon: MapPin,
-      className: 'action-cyan',
+      className: 'poster-action-cyan',
       ariaLabel: 'Abrir ubicación en Google Maps',
     },
     {
       type: 'button',
       label: 'Agregar al calendario',
-      tone: 'Guarda la fecha',
       onClick: onCalendar,
       icon: CalendarPlus,
-      className: 'action-yellow',
+      className: 'poster-action-violet',
       ariaLabel: 'Descargar evento para calendario',
     },
     {
       type: 'button',
-      label: 'Compartir',
-      tone: 'Enviar invitación',
+      label: 'Compartir invitación',
       onClick: onShare,
       icon: Share2,
-      className: 'action-blue',
+      className: 'poster-action-yellow',
       ariaLabel: 'Compartir invitación',
     },
   ]
 
+  const renderAction = ({ type, label, href, onClick, icon: Icon, className, ariaLabel }) =>
+    type === 'link' ? (
+      <a
+        className={`poster-action ${className}`}
+        href={href}
+        key={label}
+        target="_blank"
+        rel="noreferrer"
+        aria-label={ariaLabel}
+      >
+        <Icon size={18} aria-hidden="true" />
+        <span>{label}</span>
+      </a>
+    ) : (
+      <button className={`poster-action ${className}`} type="button" onClick={onClick} key={label} aria-label={ariaLabel}>
+        <Icon size={18} aria-hidden="true" />
+        <span>{label}</span>
+      </button>
+    )
+
   return (
-    <div className="actions-area">
-      <div className="action-grid" aria-label="Acciones de la invitación">
-        {actions.map(({ type, label, tone, href, onClick, icon: Icon, className, ariaLabel }) =>
-          type === 'link' ? (
-            <a
-              className={`action-button ${className}`}
-              href={href}
-              key={label}
-              target="_blank"
-              rel="noreferrer"
-              aria-label={ariaLabel}
-            >
-              <span className="action-orb">
-                <Icon size={22} aria-hidden="true" />
-              </span>
-              <span className="action-copy">
-                <strong>{label}</strong>
-                <small>{tone}</small>
-              </span>
-            </a>
-          ) : (
-            <button
-              className={`action-button ${className}`}
-              type="button"
-              onClick={onClick}
-              key={label}
-              aria-label={ariaLabel}
-            >
-              <span className="action-orb">
-                <Icon size={22} aria-hidden="true" />
-              </span>
-              <span className="action-copy">
-                <strong>{label}</strong>
-                <small>{tone}</small>
-              </span>
-            </button>
-          ),
-        )}
+    <div className="poster-actions-area">
+      <div className="poster-action-stack" aria-label="Acciones de la invitación">
+        {actions.map(renderAction)}
       </div>
       <p className="share-status" role="status" aria-live="polite">
         {shareStatus}
@@ -258,39 +328,50 @@ function ActionButtons({ onCalendar, onShare, shareStatus }) {
 
 function InvitationPoster({ isMusicPlaying, musicNotice, onToggleMusic, onCalendar, onShare, shareStatus }) {
   return (
-    <main className="party-page">
+    <main className="party-page final-party-page">
       <div className="scanlines" />
-      <div className="vapor-floor" aria-hidden="true" />
-      <span className="party-star star-one" aria-hidden="true">✦</span>
-      <span className="party-star star-two" aria-hidden="true">✧</span>
-      <span className="party-star star-three" aria-hidden="true">✦</span>
+      <span className="final-neon-line line-left" aria-hidden="true" />
+      <span className="final-neon-line line-right" aria-hidden="true" />
+      <span className="final-symbol symbol-menu" aria-hidden="true"><Menu size={24} /></span>
+      <span className="final-symbol symbol-music" aria-hidden="true"><Music2 size={22} /></span>
+      <span className="final-symbol symbol-bolt" aria-hidden="true">⚡</span>
+      <span className="final-symbol symbol-game" aria-hidden="true"><Gamepad2 size={30} /></span>
+      <span className="final-symbol symbol-cassette" aria-hidden="true" />
+      <span className="final-disco-small" aria-hidden="true">
+        <img src="/assets/disco-ball-real.png" alt="" />
+      </span>
 
-      <section className="poster-stage" aria-label="Invitación Esther 50 años">
-        <MusicPlayer isPlaying={isMusicPlaying} notice={musicNotice} onToggle={onToggleMusic} />
+      <section className="final-poster" aria-label="Invitación Esther 50 años">
+        <header className="final-hero">
+          <span className="final-pill">¡Estás invitado!</span>
+          <h1>
+            <em>Fiesta</em>
+            <strong>Retro</strong>
+            <span>80s & 90s</span>
+          </h1>
 
-        <div className="poster-hero">
-          <div className="poster-copy">
-            <p className="eyebrow">Cumpleaños retro</p>
-            <h1>{EVENT_CONFIG.title}</h1>
-            <p className="subtitle">{EVENT_CONFIG.subtitle}</p>
+          <div className="final-date-sign" aria-label={`Fecha ${EVENT_CONFIG.day}`}>
+            <span>31 de octubre</span>
           </div>
 
-          <DiscoBallImage />
+          <p>{EVENT_CONFIG.highlight}</p>
+        </header>
 
-          <div className="date-marquee" aria-label={`Fecha ${EVENT_CONFIG.day}`}>
-            <span>Fecha</span>
-            <strong>{EVENT_CONFIG.day}</strong>
-          </div>
+        <div className="final-details-panel">
+          <EventDetails />
         </div>
 
-        <p className="highlight">
-          <Sparkles size={18} aria-hidden="true" />
-          {EVENT_CONFIG.highlight}
-        </p>
+        <Countdown />
+        <PosterActions onCalendar={onCalendar} onShare={onShare} shareStatus={shareStatus} />
 
-        <EventDetails />
-        <ActionButtons onCalendar={onCalendar} onShare={onShare} shareStatus={shareStatus} />
-        {/* <footer>Invitación digital desarrollada por RCM CodeDev</footer> */}
+        <div className="final-boombox" aria-hidden="true">
+          <span />
+          <span />
+          <i />
+        </div>
+
+        <MusicPlayer isPlaying={isMusicPlaying} notice={musicNotice} onToggle={onToggleMusic} />
+        <footer>Invitación digital desarrollada por RCM CodeDev</footer>
       </section>
     </main>
   )

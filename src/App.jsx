@@ -371,7 +371,7 @@ function InvitationPoster({ isMusicPlaying, musicNotice, onToggleMusic, onCalend
         </div>
 
         <MusicPlayer isPlaying={isMusicPlaying} notice={musicNotice} onToggle={onToggleMusic} />
-        <footer>Invitación digital desarrollada por RCM CodeDev</footer>
+        {/* <footer>Invitación digital desarrollada por RCM CodeDev</footer> */}
       </section>
     </main>
   )

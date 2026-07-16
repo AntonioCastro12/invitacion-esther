@@ -20,11 +20,13 @@ const EVENT_CONFIG = {
   subtitle: 'Fiesta retro 80s & 90s',
   day: '31 de octubre',
   year: 2026,
-  startTime: '8:00 p.m.',
-  location: 'Dirección del evento, Irapuato, Guanajuato',
-  mapsUrl: 'https://maps.google.com/?q=Direcci%C3%B3n%20del%20evento%20Irapuato%20Guanajuato',
+  startHour: 14,
+  startMinute: 30,
+  startTime: '2:30 p.m.',
+  location: 'Finca los Abuelos, Irapuato, Guanajuato',
+  mapsUrl: 'https://maps.app.goo.gl/jxWAA1zaGWcLbEjL9',
   whatsappUrl:
-    'https://wa.me/52462XXXXXXX?text=Hola,%20confirmo%20mi%20asistencia%20al%20cumplea%C3%B1os%2050%20de%20Esther',
+    'https://wa.me/524622643963?text=Hola,%20confirmo%20mi%20asistencia%20al%20cumplea%C3%B1os%2050%20de%20Esther',
   dressCode: 'Retro 80s/90s',
   description: 'Fiesta de 50 años de Esther con temática retro 80s y 90s',
   highlight:
@@ -59,8 +61,8 @@ function escapeIcsText(value) {
 }
 
 function downloadCalendarEvent() {
-  const start = `${EVENT_CONFIG.year}1031T200000`
-  const end = `${EVENT_CONFIG.year}1101T010000`
+  const start = `${EVENT_CONFIG.year}1031T143000`
+  const end = `${EVENT_CONFIG.year}1031T193000`
   const stamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
 
   const icsLines = [
@@ -130,15 +132,15 @@ function IntroScreen({ step, onAdvance }) {
         <button className="entry-poster" type="button" onClick={onAdvance} aria-label="Abrir invitación completa">
           <span className="entry-kicker">Estás invitado</span>
           <span className="entry-title" aria-label="Fiesta retro">
-            <span>Fiesta</span>
-            <strong>Retro</strong>
+            <span>Festejo</span>
+            <strong>Mis 50 años</strong>
           </span>
           <span className="entry-era">80s & 90s</span>
 
           <DiscoBallImage intro revealed />
 
           <span className="entry-date">{EVENT_CONFIG.day}</span>
-          <span className="entry-message">Una noche para bailar, recordar y disfrutar como antes.</span>
+          <span className="entry-message">Una tardeada para bailar, recordar y disfrutar como antes.</span>
 
           <span className="entry-open">
             Abrir invitación
@@ -214,7 +216,7 @@ function EventDetails() {
 }
 
 function getCountdownParts() {
-  const target = new Date(EVENT_CONFIG.year, 9, 31, 20, 0, 0)
+  const target = new Date(EVENT_CONFIG.year, 9, 31, EVENT_CONFIG.startHour, EVENT_CONFIG.startMinute, 0)
   const remaining = Math.max(0, target.getTime() - Date.now())
   const totalSeconds = Math.floor(remaining / 1000)
   const days = Math.floor(totalSeconds / 86400)
@@ -284,14 +286,14 @@ function PosterActions({ onCalendar, onShare, shareStatus }) {
       className: 'poster-action-violet',
       ariaLabel: 'Descargar evento para calendario',
     },
-    {
-      type: 'button',
-      label: 'Compartir invitación',
-      onClick: onShare,
-      icon: Share2,
-      className: 'poster-action-yellow',
-      ariaLabel: 'Compartir invitación',
-    },
+    // {
+    //   type: 'button',
+    //   label: 'Compartir invitación',
+    //   onClick: onShare,
+    //   icon: Share2,
+    //   className: 'poster-action-yellow',
+    //   ariaLabel: 'Compartir invitación',
+    // },
   ]
 
   const renderAction = ({ type, label, href, onClick, icon: Icon, className, ariaLabel }) =>
